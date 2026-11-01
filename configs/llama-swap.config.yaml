@@ -1,0 +1,94 @@
+# llama-swap 多模型路由配置（8GB 显存档）
+#
+# 用法：
+#   llama-swap.exe -config llama-swap.config.yaml -watch-config
+#
+# 说明：
+#   1. 必须带 -watch-config，否则改配置不会热加载（需重启）
+#   2. ${PORT} 由 llama-swap 分配，不要写死端口
+#   3. ${llama} 是 llama-server 的路径别名，请在 llama-swap 的 macos/linux/windows 全局段里定义
+#      或用环境变量 LLAMA_SERVER_PATH 指向你的 llama-server.exe
+#
+# 替换占位符：
+#   <LLAMA_DIR>   llama-server.exe 所在目录
+#   <MODELS_DIR>  权重文件所在目录
+#
+# 显存账（8GB 卡，权重 + KV + 计算缓冲，4-bit KV）：
+#   权重 5.9G → 上下文上限约 80K
+#   权重 5.5G → 同上
+#   权重 4.9G → 上下文可到 64K 左右
+#   权重 ≤2.5G → 可开 32K 或与另一小模型共存
+
+models:
+  # ── 大模型档（必须独占 8GB 显存，一次只能挂一个）────────────────
+
+  # 27B 去审查，4-bit KV，80K 上下文：可以日常用的最大档
+  large-27b:
+    cmd: |
+      <LLAMA_DIR>/llama-server.exe --host 127.0.0.1 --port ${PORT}
+      --model <MODELS_DIR>/27B/Ternary-27B-heresy-PTQ1_0.gguf
+      -ngl 99 -c 81920 -fa on -np 1 --jinja
+      --cache-type-k q4_0 --cache-type-v q4_0
+      --reasoning-budget 0 --reasoning-format none
+      --temp 0.7 --top-p 0.9 --top-k 20 --min-p 0.05 --repeat-penalty 1.1
+    proxy: http://127.0.0.1:${PORT}
+    ttl: 1800
+
+  # 9B 多模态（带 mmproj 视觉）
+  mid-9b-vl:
+    cmd: |
+      <LLAMA_DIR>/llama-server.exe --host 127.0.0.1 --port ${PORT}
+      --model <MODELS_DIR>/9B/Ternary-9B-PQ2_0.gguf
+      --mmproj <MODELS_DIR>/9B/mmproj-Q8_0.gguf
+      -ngl 99 -c 32768 -fa on --jinja --reasoning-budget 0
+    proxy: http://127.0.0.1:${PORT}
+    ttl: 1800
+
+  # 9B + MTP 投机解码：短输出场景明显更快
+  mid-9b-mtp:
+    cmd: |
+      <LLAMA_DIR>/llama-server.exe --host 127.0.0.1 --port ${PORT}
+      --model <MODELS_DIR>/9B/Ternary-9B-PQ2_0-MTP-Q8_0.gguf
+      --mmproj <MODELS_DIR>/9B/mmproj-Q8_0.gguf
+      -ngl 99 -c 16384 -fa on --jinja --reasoning-budget 0
+      --spec-type draft-mtp --spec-draft-n-max 2 --spec-draft-n-min 0 --spec-draft-p-min 0
+    proxy: http://127.0.0.1:${PORT}
+    ttl: 1800
+
+  # ── 小模型档（可与另一个小模型共存）──────────────────────────
+
+  # 1.8B 翻译专用
+  small-mt:
+    cmd: |
+      <LLAMA_DIR>/llama-server.exe --host 127.0.0.1 --port ${PORT}
+      --model <MODELS_DIR>/small/HyMT2-1.8B-Q8_0.gguf
+      -ngl 99 -c 8192 -fa on --jinja
+      --temp 0.3 --top-p 0.9 --top-k 20 --repeat-penalty 1.0
+    proxy: http://127.0.0.1:${PORT}
+    ttl: 1800
+
+  # 0.6B 向量模型（检索/记忆用）
+  embedding:
+    cmd: |
+      <LLAMA_DIR>/llama-server.exe --host 127.0.0.1 --port ${PORT}
+      --model <MODELS_DIR>/small/Qwen3-Embedding-0.6B-Q8_0.gguf
+      -ngl 99 -c 8192 -fa on --pooling last --embeddings
+    proxy: http://127.0.0.1:${PORT}
+    ttl: 1800
+
+# ── 配置要点（踩过的坑）──────────────────────────────────────────
+#
+# 1. 4-bit KV 是 8GB 卡开长上下文的硬前提：
+#      --cache-type-k q4_0 --cache-type-v q4_0
+#    f16 KV 是 64 KiB/token，q4_0 只有 18 KiB/token，差 3.5 倍。
+#
+# 2. --no-cuda-graph 在某些混合精度推理引擎上是必需项（否则启动失败）；
+#    llama.cpp 一般不需要，除非显存吃紧。
+#
+# 3. -np 1：并发 1。8GB 卡开多并发会直接把显存打爆。
+#
+# 4. --reasoning off：如果模型带思维链而你不想要，显式关掉，
+#    否则 max_tokens 会被思维链吃光。
+#
+# 5. ttl 是空闲卸载时间（秒）。设 1800 意味着闲置 30 分钟后释放显存，
+#    给 ComfyUI 之类腾地方。

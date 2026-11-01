@@ -1,0 +1,36 @@
+# ── 权重与数据（绝不入库）──
+*.gguf
+*.safetensors
+*.ninfer
+*.bin
+*.pt
+*.onnx
+models/
+weights/
+data/
+
+# ── 密钥与私有配置 ──
+.env
+.env.*
+*.key
+secrets.json
+**/config.local.yaml
+
+# ── 个人数据 ──
+*.sqlite
+*.sqlite3
+*.db
+logs/
+*.log
+
+# ── 系统与缓存 ──
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+Thumbs.db
+*.bak
+*.backup
+.vscode/
+.idea/

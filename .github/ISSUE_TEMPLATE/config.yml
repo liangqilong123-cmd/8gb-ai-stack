@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 先读故障排查
+    url: https://github.com/liangqilong123-cmd/8gb-ai-stack/blob/main/docs/%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5.md
+    about: OOM、掉速、上下文崩塌、进程被回收——这些情况文档里都有记录，先对照一遍再提交 issue

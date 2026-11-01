@@ -1,5 +1,7 @@
 # 8GB 显存本地大模型实战栈
 
+中文说明 · [English](README.en.md)
+
 > **一台 RTX 4070 Laptop（8GB 显存）+ 24GB 内存的 Windows 笔记本，跑 27B 三元量化模型，256K 上下文，中文创作 28 tok/s。**
 > 本仓库不是教程合集，是一份**实测过的配置与数据**：哪些模型装得下、上下文能开多长、速度掉在哪一步、三个推理后端如何互斥。
 
@@ -55,7 +57,7 @@
 
 ```bash
 # 1. 克隆
-git clone https://github.com/<you>/8gb-ai-stack.git && cd 8gb-ai-stack
+git clone https://github.com/liangqilong123-cmd/8gb-ai-stack.git && cd 8gb-ai-stack
 
 # 2. 改路径：把 configs/ 里所有 <LLAMA_DIR> / <MODELS_DIR> 换成你自己的
 grep -rn "<LLAMA_DIR>\|<MODELS_DIR>" configs/
@@ -76,9 +78,9 @@ curl http://127.0.0.1:8080/v1/models
 
 | 路径 | 内容 |
 |---|---|
-| `configs/llama-swap.config.yaml` | 多模型路由配置（9 个模型档位，含显存与上下文注释） |
+| `configs/llama-swap.config.yaml` | 多模型路由配置（5 个模型档位，含显存与上下文注释） |
 | `configs/ninfer-start.ps1` | 27B 单模型启动脚本（256K 上下文 + CPU 视觉 + MTP） |
-| `configs/start-ninfer.bat` | 纯 ASCII 双击启动器（防重复启动） |
+| `configs/start-engine.bat` | 纯 ASCII 双击启动器（防重复启动） |
 | `docs/显存互斥与上下文预算.md` | **三后端互斥规则** + 上下文上限实测 + KV 缓存算账 |
 | `docs/实测数据.md` | 全部速度数据的测量方法与口径 |
 | `docs/故障排查.md` | OOM、掉速、上下文崩塌、进程被回收、驱动 TDR |

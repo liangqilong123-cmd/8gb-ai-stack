@@ -1,0 +1,87 @@
+name: 配置复现问题
+description: 按本仓库的配置跑不通，或速度与文档差距很大
+title: "[复现] "
+labels: ["reproduction"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。8GB 卡的失败往往高度依赖具体硬件，请把下面的信息填全，否则很难定位。
+
+        **填之前先自查两件事**：
+        1. `nvidia-smi --query-gpu=memory.used,memory.free --format=csv,noheader` —— 剩余显存是否被别的进程占用
+        2. 你是否在跑大模型的同时开着 ComfyUI 或其他占显存的程序
+
+  - type: input
+    id: gpu
+    attributes:
+      label: 显卡型号与显存
+      placeholder: 例如 RTX 4070 Laptop 8GB
+    validations:
+      required: true
+
+  - type: input
+    id: ram
+    attributes:
+      label: 内存容量
+      placeholder: 例如 24GB DDR5
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: 操作系统与驱动版本
+      placeholder: 例如 Windows 11 24H2 / NVIDIA 580.xx
+    validations:
+      required: true
+
+  - type: dropdown
+    id: backend
+    attributes:
+      label: 使用的后端
+      options:
+        - llama-swap
+        - NInfer
+        - KVMem / 长上下文引擎
+        - llama.cpp 直跑
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: 实际使用的启动参数
+      description: 贴完整命令行（路径可脱敏），尤其是量化格式、上下文长度、KV 缓存类型、ngl
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期 vs 实际
+      description: 参照 docs/实测数据.md 里的数字，说明你预期多少、实际多少
+      placeholder: |
+        预期：预填充约 800 tok/s
+        实际：只有 60 tok/s
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 关键日志
+      description: 报错行、显存相关日志、启动参数回显。注意删掉密钥与个人信息
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已阅读 docs/故障排查.md
+          required: true
+        - label: 我确认同一时刻没有其他程序占用显存
+          required: true

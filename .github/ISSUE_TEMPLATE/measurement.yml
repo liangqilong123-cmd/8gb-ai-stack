@@ -1,0 +1,65 @@
+name: 硬件实测数据贡献
+description: 在你的显卡上跑了同一套配置，提交你的数字（最有价值的贡献）
+title: "[数据] "
+labels: ["measurement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        本仓库的核心价值是「可复现的实测数字」。如果你的硬件不同（或相同），欢迎提交你的结果——**同型号复现同样有价值**，能验证数字的可重复性。
+
+        测量方法请严格照 `scripts/bench_stream.py` 或 `docs/实测数据.md` 的口径，否则数字不可比。
+
+  - type: input
+    id: hardware
+    attributes:
+      label: 硬件
+      placeholder: RTX 4070 Laptop 8GB / 24GB DDR5 / Windows 11
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: 模型与量化格式
+      placeholder: 例如 Ternary-Bonsai-2-27B PTQ1，权重 5.94GB
+    validations:
+      required: true
+
+  - type: textarea
+    id: numbers
+    attributes:
+      label: 实测数字
+      description: 请注明口径（是否含首 token、是否为流式、样本长度）
+      placeholder: |
+        中文创作：__ tok/s（样本 500 字，流式，取 3 次均值）
+        预填充：__ tok/s（1.4 万字提示词）
+        上下文上限实测：__
+        显存峰值：__ MiB
+    validations:
+      required: true
+
+  - type: input
+    id: method
+    attributes:
+      label: 测量命令
+      description: 用了哪个脚本或哪条命令
+      placeholder: python scripts/bench_stream.py --url ... --model ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 异常与观察
+      description: 例如某档上下文突然崩塌、显存抖动、温度墙触发降频
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 测量时没有其他程序占用显存
+          required: true
+        - label: 已注明口径，且与其他数字同口径可比
+          required: true
